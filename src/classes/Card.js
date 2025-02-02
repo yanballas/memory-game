@@ -34,19 +34,19 @@ export class Card extends Phaser.GameObjects.Sprite {
 		})
 	}
 	
-	hideCard() {
+	hideCard(callback) {
 		this.#scene.tweens.add({
 			targets: this,
 			scaleX: 0,
 			ease: 'power2.out',
 			duration: 300,
 			onComplete: () => {
-				this.showCard()
+				this.showCard(callback)
 			}
 		})
 	}
 	
-	showCard() {
+	showCard(callback) {
 		const texture = this.#isOpened ? `card-back${this.#cardCount}` : 'card-front';
 		this.setTexture(texture)
 		this.#scene.tweens.add({
@@ -54,6 +54,9 @@ export class Card extends Phaser.GameObjects.Sprite {
 			scaleX: 1,
 			ease: 'power2.out',
 			duration: 300,
+			onComplete: () => {
+				if (callback) callback();
+			}
 		})
 	}
 	
@@ -61,16 +64,15 @@ export class Card extends Phaser.GameObjects.Sprite {
 		switch (action) {
 			case 'open': {
 				this.#isOpened = true;
-				this.hideCard(`card-back${this.#cardCount}`);
+				this.hideCard(callback);
 				break;
 			}
 			case 'close': {
 				this.#isOpened = false;
-				this.hideCard('card-front');
+				this.hideCard(callback);
 				break;
 			}
 		}
-		if (callback) callback()
 	}
 	
 	get cardCount() {

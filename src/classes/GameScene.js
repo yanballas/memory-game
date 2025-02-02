@@ -127,7 +127,7 @@ export class GameScene extends Phaser.Scene {
 		let count = 0;
 		const onCardMoveComplete = () => {
 			++count;
-			if (count >= this.#cards.length) this.start();
+			if (count >= this.#cards.length) this.start('restart');
 		}
 		this.#cards.forEach(card => {
 			const { delay } = card.positions;
