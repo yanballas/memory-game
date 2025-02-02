@@ -12,6 +12,8 @@ import cardBack5 from '/sprites/card-back5.png';
 export class GameScene extends Phaser.Scene {
 	#config = {}
 	#cards = []
+	#openedCard = null
+	#openedCardsCount = 0
 	constructor(config) {
 		super("Game");
 		this.#config = config;
@@ -32,21 +34,47 @@ export class GameScene extends Phaser.Scene {
 		// this.add.sprite(0, 0, 'background').setOrigin(0, 0)
 	}
 	createCard() {
-		const currentPositions = this.cardPositions
-		Phaser.Utils.Array.Shuffle(currentPositions)
-		this.#config.cards.forEach((card) => {
+		this.#config.cardsCounters.forEach((cardCount) => {
 			for (let y = 0; y < 2; y++) {
-				this.#cards.push(new Card(this, card, currentPositions.pop()));
+				this.#cards.push(new Card(this, cardCount));
 			}
 		})
 		this.input.on("gameobjectdown", this.onCardClick, this)
 	}
 	onCardClick(pointer, card) {
-		card.openCard()
+		if (card.isOpened) return // карта открыта
+		if (this.#openedCard) {
+			// уже есть открытая карта
+			if (this.#openedCard.cardCount === card.cardCount) {
+				// карты равны - запомнить
+				this.#openedCard = null;
+				this.#openedCardsCount++;
+			} else {
+				// карты разные, скрыть прошлую
+				this.#openedCard.toggleCard('close')
+				this.#openedCard = card;
+			}
+		} else this.#openedCard = card; // еще нет открытой карты
+		card.toggleCard('open') // тогглер для отображения
+		if (this.#openedCardsCount === this.#config.cardsCounters.length) return this.restart("restart") // перезапуск игры
 	}
 	create() {
 		this.createBackground();
 		this.createCard();
+		this.restart();
+	}
+	restart(action) {
+		this.#openedCard = null;
+		this.#openedCardsCount = 0;
+		this.initialCards(action);
+	}
+	initialCards(action = 'start') {
+		const currentPositions = this.cardPositions
+		this.#cards.forEach(card => {
+			const position = currentPositions.pop()
+			if (action === 'restart') card.toggleCard('close')
+			card.setPosition(position.x, position.y)
+		});
 	}
 	get cardPositions() {
 		const positions = [];
@@ -56,14 +84,14 @@ export class GameScene extends Phaser.Scene {
 			height: cardTexture.height + this.#config.gap,
 		}
 		const offset = {
-			x: (this.sys.game.config.width - cardSizes.width * this.#config.cols) / 2,
-			y: (this.sys.game.config.height - cardSizes.height * this.#config.rows) / 2,
+			x: (this.sys.game.config.width - cardSizes.width * this.#config.cols) / 2 + cardSizes.width / 2,
+			y: (this.sys.game.config.height - cardSizes.height * this.#config.rows) / 2 + cardSizes.height / 2,
 		}
 		for (let row = 0; row < this.#config.rows; row++) {
 			for (let col = 0; col < this.#config.cols; col++) {
 				positions.push({ x: offset.x + col * cardSizes.width, y: offset.y + row * cardSizes.height });
 			}
 		}
-		return positions
+		return Phaser.Utils.Array.Shuffle(positions)
 	}
 }
