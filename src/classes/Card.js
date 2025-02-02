@@ -2,6 +2,7 @@ export class Card extends Phaser.GameObjects.Sprite {
 	#scene;
 	#cardCount;
 	#isOpened;
+	#positions;
 	constructor(scene, cardCount) {
 		super(scene, 0, 0, 'card-front');
 		this.#scene = scene;
@@ -11,6 +12,26 @@ export class Card extends Phaser.GameObjects.Sprite {
 		this.#isOpened = false
 		this.setInteractive();
 		// this.on('pointerdown', this.#openCard, this)
+	}
+	
+	initial(positions, action) {
+		this.#positions = positions
+		if (action === 'restart') this.toggleCard('close')
+		this.setPosition(-this.width, -this.height)
+	}
+	
+	move(positions) {
+		this.#scene.tweens.add({
+			targets: this,
+			x: positions.x,
+			y: positions.y,
+			ease: 'power2.easeInOut',
+			duration: 300,
+			delay: positions.delay,
+			onComplete: () => {
+				if (positions.callback) positions.callback()
+			}
+		})
 	}
 	
 	hideCard() {
@@ -36,7 +57,7 @@ export class Card extends Phaser.GameObjects.Sprite {
 		})
 	}
 	
-	toggleCard(action) {
+	toggleCard(action, callback = null) {
 		switch (action) {
 			case 'open': {
 				this.#isOpened = true;
@@ -49,6 +70,7 @@ export class Card extends Phaser.GameObjects.Sprite {
 				break;
 			}
 		}
+		if (callback) callback()
 	}
 	
 	get cardCount() {
@@ -57,6 +79,10 @@ export class Card extends Phaser.GameObjects.Sprite {
 	
 	get isOpened() {
 		return this.#isOpened;
+	}
+	
+	get positions() {
+		return this.#positions;
 	}
 	
 	set isOpened(newValue) {
