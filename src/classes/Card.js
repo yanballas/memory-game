@@ -13,19 +13,20 @@ export class Card extends Phaser.GameObjects.Sprite {
 		// this.on('pointerdown', this.#openCard, this)
 	}
 	
-	hideCard(texture) {
+	hideCard() {
 		this.#scene.tweens.add({
 			targets: this,
 			scaleX: 0,
 			ease: 'power2.out',
 			duration: 300,
 			onComplete: () => {
-				this.showCard(texture)
+				this.showCard()
 			}
 		})
 	}
 	
-	showCard(texture) {
+	showCard() {
+		const texture = this.#isOpened ? `card-back${this.#cardCount}` : 'card-front';
 		this.setTexture(texture)
 		this.#scene.tweens.add({
 			targets: this,

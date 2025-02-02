@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		rows: 2,
 		cols: 5,
 		gap: 4,
+		counterTimer: 30
 	}
 	const gameConfig = {
 		...sceneConfig,
