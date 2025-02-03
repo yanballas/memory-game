@@ -1,12 +1,12 @@
 export class Card extends Phaser.GameObjects.Sprite {
 	#scene;
-	#cardCount;
+	#cardName;
 	#isOpened;
 	#positions;
-	constructor(scene, cardCount) {
+	constructor(scene, cardName) {
 		super(scene, 0, 0, 'card-front');
 		this.#scene = scene;
-		this.#cardCount = cardCount;
+		this.#cardName = cardName;
 		// this.setOrigin(0.5, 0.5)
 		this.#scene.add.existing(this);
 		this.#isOpened = false
@@ -47,7 +47,9 @@ export class Card extends Phaser.GameObjects.Sprite {
 	}
 	
 	showCard(callback) {
-		const texture = this.#isOpened ? `card-back${this.#cardCount}` : 'card-front';
+		let texture;
+		if (this.isOpened) texture = this.#cardName === 'card-empty' ? this.#cardName : `card-back${this.#cardName}`
+		else texture = 'card-front'
 		this.setTexture(texture)
 		this.#scene.tweens.add({
 			targets: this,
@@ -75,8 +77,8 @@ export class Card extends Phaser.GameObjects.Sprite {
 		}
 	}
 	
-	get cardCount() {
-		return this.#cardCount;
+	get cardName() {
+		return this.#cardName;
 	}
 	
 	get isOpened() {

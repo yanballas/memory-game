@@ -7,10 +7,39 @@ document.addEventListener('DOMContentLoaded', () => {
 		width: 1280,
 		height: 720,
 		cardsCounters: [1, 2, 3, 4, 5],
+		levels: [
+			{
+				counterTimer: 15,
+				currentCardsCounters: [1, 2],
+			},
+			{
+				counterTimer: 20,
+				currentCardsCounters: [1, 2, 3],
+			},
+			{
+				counterTimer: 25,
+				currentCardsCounters: [1, 2, 3, 4],
+			},
+			{
+				counterTimer: 30,
+				currentCardsCounters: [1, 2, 3, 4, 5],
+			},
+			{
+				counterTimer: 25,
+				currentCardsCounters: [1, 2, 3, 4, 5],
+			},
+			{
+				counterTimer: 20,
+				currentCardsCounters: [1, 2, 3, 4, 5],
+			},
+			{
+				counterTimer: 15,
+				currentCardsCounters: [1, 2, 3, 4, 5],
+			},
+		],
 		rows: 2,
 		cols: 5,
 		gap: 4,
-		counterTimer: 30
 	}
 	const gameConfig = {
 		...sceneConfig,

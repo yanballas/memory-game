@@ -2,6 +2,7 @@ import {Card} from "./Card.js";
 
 import background from '/sprites/background.png';
 import cardFront from '/sprites/card-front.png';
+import cardEmpty from '/sprites/card-empty.jpg';
 
 import cardBack1 from '/sprites/card-back1.png';
 import cardBack2 from '/sprites/card-back2.png';
@@ -21,17 +22,24 @@ export class GameScene extends Phaser.Scene {
 	#openedCard = null
 	#openedCardsCount = 0
 	#timeOutText = {}
+	#levelOutText = {}
+	#scoreOutText = {}
 	#timer = {}
 	#counterTimer = 0
 	#sounds = {}
+	#level = 0
+	#isWin = false
+	#score = 0
+	#cardsSeries = 0
+	
 	constructor(config) {
 		super("Game");
 		this.#config = config;
-		this.#counterTimer = this.#config.counterTimer;
 	}
 	preload() {
 		this.load.image('background', background)
 		this.load.image('card-front', cardFront)
+		this.load.image('card-empty', cardEmpty)
 		
 		this.load.image('card-back1', cardBack1)
 		this.load.image('card-back2', cardBack2)
@@ -53,15 +61,35 @@ export class GameScene extends Phaser.Scene {
 	createText() {
 		this.#timeOutText = this.add.text(10, 320, `Time: ${this.#counterTimer}`, {
 			font: '24px Century-Gothic',
-			fill: 'white'
+			fill: '#fefe22'
 		})
+		this.#levelOutText = this.add.text(this.sys.game.config.width / 2 - 48, 10, `Level: ${this.#level+1}`, {
+			font: '48px Century-Gothic',
+			fill: '#fefe22',
+		})
+		this.#scoreOutText = this.add.text(10, 240, `Score: ${this.#score}`, {
+			font: '24px Century-Gothic',
+			fill: '#fefe22',
+		})
+		this.#timeOutText.setDepth(999)
+		this.#levelOutText.setDepth(999)
+		this.#scoreOutText.setDepth(999)
 	}
 	createCard() {
-		this.#config.cardsCounters.forEach((cardCount) => {
-			for (let y = 0; y < 2; y++) {
-				this.#cards.push(new Card(this, cardCount));
-			}
-		})
+		const pushedCards = (arr) => {
+			arr.forEach((cardName) => {
+				for (let i = 0; i < 2; i++) {
+					this.#cards.push(new Card(this, cardName));
+				}
+			})
+		}
+		
+		this.#cards.length = 0
+		const emptyCards = Array.from({length: this.#config.cardsCounters.filter(card => !this.#config.levels[this.#level].currentCardsCounters.includes(card)).length}, () => 'card-empty')
+		if (emptyCards.length !== this.#config.levels[this.#level].currentCardsCounters.length) {
+			pushedCards(emptyCards)
+		}
+		pushedCards(this.#config.levels[this.#level].currentCardsCounters)
 		this.input.on("gameobjectdown", this.onCardClick, this)
 	}
 	onTimerTick() {
@@ -91,25 +119,56 @@ export class GameScene extends Phaser.Scene {
 			timeout: this.sound.add('timeout')
 		}
 	}
+	updateScore(seriesNumber) {
+		if (!seriesNumber) return
+		switch (seriesNumber) {
+			case 1: {
+				this.#score += 100;
+				break;
+			}
+			case 2: {
+				this.#score += 250;
+				break;
+			}
+			case 3: {
+				this.#score += 500;
+				break;
+			}
+			case 4: {
+				this.#score += 1000;
+				break;
+			}
+			case 5: {
+				this.#score += 5000;
+				break;
+			}
+		}
+		this.#scoreOutText.setText(`Score: ${this.#score}`)
+	}
 	onCardClick(pointer, card) {
 		if (card.isOpened) return // карта открыта
+		
 		this.#sounds.card.play()
 		if (this.#openedCard) {
 			// уже есть открытая карта
-			if (this.#openedCard.cardCount === card.cardCount) {
+			if (this.#openedCard.cardName === card.cardName && card.cardName !== 'card-empty') {
 				// карты равны - запомнить
 				this.#sounds.complete.play()
 				this.#openedCard = null;
 				this.#openedCardsCount++;
+				this.#cardsSeries++
 			} else {
 				// карты разные, скрыть прошлую
 				this.#openedCard.toggleCard('close')
+				this.#cardsSeries = 0
 				this.#openedCard = card;
 			}
+			this.updateScore(this.#cardsSeries)
 		} else this.#openedCard = card; // еще нет открытой карты
 		const callbackOpen = () => {
-			if (this.#openedCardsCount === this.#config.cardsCounters.length) {
+			if (this.#openedCardsCount === this.#config.levels[this.#level].currentCardsCounters.length) {
 				this.#sounds.success.play()
+				this.#isWin = true
 				return this.restart()
 			} // перезапуск игры
 		}
@@ -127,7 +186,15 @@ export class GameScene extends Phaser.Scene {
 		let count = 0;
 		const onCardMoveComplete = () => {
 			++count;
-			if (count >= this.#cards.length) this.start('restart');
+			if (count >= this.#cards.length) {
+				if (!this.#isWin) {
+					this.#level = 0;
+				} else {
+						this.#level += 1;
+				}
+				this.createCard()
+				this.start('restart')
+			};
 		}
 		this.#cards.forEach(card => {
 			const { delay } = card.positions;
@@ -142,13 +209,15 @@ export class GameScene extends Phaser.Scene {
 	start(action) {
 		this.#openedCard = null;
 		this.#openedCardsCount = 0;
-		this.#counterTimer = this.#config.counterTimer;
+		this.#counterTimer = this.#config.levels[this.#level].counterTimer;
 		this.#timer.paused = false;
+		this.#isWin = false
 		this.#sounds.theme.play({
 			volume: 0.05
 		})
+		this.#levelOutText.setText(`Level: ${this.#level+1}`)
 		this.initialCards(action);
-		this.showCards()
+		this.visibilityCards()
 	}
 	initialCards(action = 'start') {
 		const currentPositions = this.cardPositions
@@ -156,7 +225,7 @@ export class GameScene extends Phaser.Scene {
 			card.initial(currentPositions.pop(), action)
 		});
 	}
-	showCards() {
+	visibilityCards() {
 		this.#cards.forEach(card => {
 			const { x, y, delay } = card.positions;
 			card.depth = delay;
