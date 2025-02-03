@@ -69,7 +69,7 @@ export class GameScene extends Phaser.Scene {
 		if (this.#counterTimer <= 0) {
 			this.#timer.paused = true;
 			this.#sounds.timeout.play();
-			this.restart('restart');
+			this.restart();
 		}
 		this.#timeOutText.setText(`Time: ${this.#counterTimer}`)
 	}
@@ -110,7 +110,7 @@ export class GameScene extends Phaser.Scene {
 		const callbackOpen = () => {
 			if (this.#openedCardsCount === this.#config.cardsCounters.length) {
 				this.#sounds.success.play()
-				return this.restart("restart")
+				return this.restart()
 			} // перезапуск игры
 		}
 		card.toggleCard('open', callbackOpen) // тогглер для отображения

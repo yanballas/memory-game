@@ -69,7 +69,7 @@ export class Card extends Phaser.GameObjects.Sprite {
 			}
 			case 'close': {
 				this.#isOpened = false;
-				this.hideCard(callback);
+				this.hideCard(null);
 				break;
 			}
 		}
